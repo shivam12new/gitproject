@@ -1,0 +1,31 @@
+Steps to Install Prometheus + Grafana-----
+🔹 1. Add Helm repo and update
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+
+
+2. Create a namespace 
+
+kubectl create namespace monitoring
+
+3. Install kube-prometheus-stack
+
+helm install prometheus-stack prometheus-community/kube-prometheus-stack --namespace monitoring
+
+5. Access Grafana Dashboard
+
+kubectl port-forward svc/prometheus-stack-grafana -n monitoring 3000:80
+
+
+Default Username: admin
+
+Default Password: prom-operator
+
+
+Access Prometheus UI
+kubectl port-forward svc/prometheus-stack-prometheus -n monitoring 9090
+
+
+To Uninstall----
+helm uninstall prometheus-stack -n monitoring
+kubectl delete namespace monitoring

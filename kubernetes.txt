@@ -1,0 +1,134 @@
+Kubernetes — Interview Questions & Answers
+1. What are the main components of the Kubernetes control plane?
+Answer:
+
+kube-apiserver: Handles API requests.
+
+etcd: Key-value store for cluster state.
+
+kube-scheduler: Assigns pods to nodes.
+
+kube-controller-manager: Runs controllers to manage state.
+
+cloud-controller-manager: Handles cloud-specific logic.
+
+2. What is the difference between a Pod, ReplicaSet, and Deployment?
+Answer:
+
+Pod: The smallest unit; holds containers.
+
+ReplicaSet: Ensures a set number of pod replicas.
+
+Deployment: Manages ReplicaSets and handles updates/rollbacks.
+
+3. How does Kubernetes perform a rolling update?
+Answer:
+When a deployment is updated:
+
+Old pods are gradually replaced with new ones.
+
+The process respects maxSurge and maxUnavailable settings to ensure availability.
+
+4. What is a StatefulSet, and when should you use it?
+Answer:
+A StatefulSet is used for applications that require:
+
+Stable, unique network identities (e.g., databases)
+
+Persistent storage per pod
+It ensures ordered deployment and scaling.
+
+5. How does Kubernetes handle service discovery?
+Answer:
+
+Services get a DNS name via kube-dns or CoreDNS.
+
+Environment variables and cluster DNS allow pods to discover other services.
+
+6. What is a ConfigMap vs. a Secret in Kubernetes?
+Answer:
+
+ConfigMap: Stores non-sensitive config data in key-value format.
+
+Secret: Stores sensitive data (e.g., passwords, tokens) in base64-encoded form.
+
+7. How do liveness and readiness probes work?
+Answer:
+
+Liveness probe: Checks if a container is alive. If it fails, the container is restarted.
+
+Readiness probe: Checks if a container is ready to serve traffic.
+
+Example:
+
+yaml
+Copy
+Edit
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 15
+  periodSeconds: 10
+8. What are taints and tolerations in Kubernetes?
+Answer:
+
+Taints: Prevent pods from being scheduled on a node.
+
+Tolerations: Allow pods to run on nodes with matching taints.
+
+Used for node isolation (e.g., GPU workloads).
+
+9. How does Horizontal Pod Autoscaling (HPA) work?
+Answer:
+HPA automatically scales the number of pods based on metrics (CPU/memory/custom).
+
+bash
+Copy
+Edit
+kubectl autoscale deployment myapp --cpu-percent=70 --min=1 --max=10
+10. What is a Helm chart?
+Answer:
+Helm is a package manager for Kubernetes. A Helm chart is a collection of templates and values used to define, install, and manage Kubernetes resources.
+
+11. How do you debug a pod stuck in CrashLoopBackOff?
+Answer:
+
+Check logs: kubectl logs <pod>
+
+Check describe: kubectl describe pod <pod>
+
+Inspect image, probes, secrets, and config issues.
+
+12. What is the difference between ClusterIP, NodePort, and LoadBalancer services?
+Answer:
+
+ClusterIP: Default, internal-only access.
+
+NodePort: Exposes service on a static port on each node.
+
+LoadBalancer: Uses cloud provider to expose service via external load balancer.
+
+13. How do you mount a ConfigMap and a Secret to a pod?
+Answer:
+
+yaml
+Copy
+Edit
+volumeMounts:
+  - name: config-volume
+    mountPath: /etc/config
+volumes:
+  - name: config-volume
+    configMap:
+      name: my-config
+14. How does RBAC work in Kubernetes?
+Answer:
+Role-Based Access Control (RBAC) controls user/group permissions.
+
+Components:
+
+Role/ClusterRole: Defines permissions.
+
+RoleBinding/ClusterRoleBinding: Assigns roles to users.
+

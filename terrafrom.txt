@@ -1,0 +1,110 @@
+Terraform — Interview Questions & Answers
+1. What is Terraform and why is it used in DevOps?
+Answer:
+Terraform is an open-source Infrastructure as Code (IaC) tool by HashiCorp. It allows you to define, provision, and manage infrastructure using declarative configuration files. It supports multiple cloud providers like AWS, Azure, and GCP.
+
+2. What is the difference between Terraform and other IaC tools like Ansible?
+Answer:
+
+Terraform is declarative and focuses on infrastructure provisioning.
+
+Ansible is procedural and focuses on configuration management.
+Terraform builds infrastructure from scratch, while Ansible configures existing systems.
+
+3. What are Terraform providers, modules, and resources?
+Answer:
+
+Provider: Plugin that connects to a specific cloud or service (e.g., AWS, Azure).
+
+Module: Reusable code block.
+
+Resource: A basic building block (e.g., aws_instance, azurerm_resource_group).
+
+4. How does Terraform handle state management?
+Answer:
+Terraform maintains a .tfstate file that tracks the current state of infrastructure. This file is used during plan and apply phases to determine what needs to change.
+
+5. How do you manage remote state in Terraform?
+Answer:
+Use a backend like AWS S3, Azure Blob, or Terraform Cloud. This allows multiple team members to share the same state file safely.
+
+Example:
+
+hcl
+Copy
+Edit
+backend "s3" {
+  bucket = "my-terraform-state"
+  key    = "prod/terraform.tfstate"
+  region = "us-east-1"
+}
+6. What are workspaces in Terraform?
+Answer:
+Workspaces allow you to maintain multiple versions of state within the same configuration directory. Useful for managing environments like dev, stage, and prod.
+
+7. How do terraform plan and terraform apply work?
+Answer:
+
+terraform plan: Shows what changes will be made without applying them.
+
+terraform apply: Applies the changes to the infrastructure.
+
+8. What is the difference between count and for_each in Terraform?
+Answer:
+
+count: Creates multiple instances of a resource using an index.
+
+for_each: Creates multiple named instances using map or set.
+
+Example:
+
+hcl
+Copy
+Edit
+resource "aws_instance" "example" {
+  for_each = var.instances
+  ami      = each.value.ami
+  instance_type = each.value.type
+}
+9. How do you create reusable modules in Terraform?
+Answer:
+Create a directory with main.tf, variables.tf, and outputs.tf. Reference it in another config:
+
+hcl
+Copy
+Edit
+module "vpc" {
+  source = "./modules/vpc"
+  cidr_block = "10.0.0.0/16"
+}
+10. How do you handle sensitive data like credentials in Terraform?
+Answer:
+
+Use environment variables for credentials (e.g., AWS_ACCESS_KEY_ID)
+
+Use .tfvars files (excluded via .gitignore)
+
+Use secret management tools like Vault or AWS Secrets Manager
+
+11. What is a null_resource and when do you use it?
+Answer:
+A null_resource allows you to execute arbitrary local actions using provisioners. Used when there's no resource to associate with a script.
+
+Example:
+
+hcl
+Copy
+Edit
+resource "null_resource" "example" {
+  provisioner "local-exec" {
+    command = "echo Hello, Terraform"
+  }
+}
+12. How do you upgrade Terraform provider versions?
+Answer:
+Update the version in required_providers block and run:
+
+bash
+Copy
+Edit
+terraform init -upgrade

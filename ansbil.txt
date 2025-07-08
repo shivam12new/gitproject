@@ -1,0 +1,134 @@
+Ansible — Interview Questions & Answers
+1. What is Ansible and how does it differ from other configuration management tools?
+Answer:
+Ansible is an open-source configuration management, provisioning, and application deployment tool. It uses YAML for playbooks, and works agentlessly over SSH, unlike tools like Puppet or Chef which require agents.
+
+2. What are Ansible playbooks and how are they structured?
+Answer:
+Playbooks are YAML files that define a series of tasks to be executed on remote hosts.
+
+Structure:
+
+yaml
+Copy
+Edit
+- name: Install Nginx
+  hosts: web
+  become: yes
+  tasks:
+    - name: Install package
+      apt:
+        name: nginx
+        state: present
+3. What is the difference between a role and a playbook in Ansible?
+Answer:
+
+A playbook is a file that defines tasks and target hosts.
+
+A role is a standardized folder structure for organizing playbooks, tasks, handlers, variables, and templates, making them reusable.
+
+4. What are Ansible variables and how do you manage their precedence?
+Answer:
+Variables can be defined in multiple places (e.g., inventory, playbook, command line). Precedence order (from lowest to highest):
+
+Role defaults
+
+Inventory variables
+
+Playbook variables
+
+Extra vars (--extra-vars) — highest precedence
+
+5. What is an inventory file in Ansible?
+Answer:
+An inventory defines the target machines Ansible will manage. It can be static or dynamic.
+
+Example:
+
+ini
+Copy
+Edit
+[web]
+web01 ansible_host=192.168.1.10
+web02 ansible_host=192.168.1.11
+6. How does Ansible handle idempotency?
+Answer:
+Ansible modules are designed to be idempotent — meaning running the same playbook multiple times will produce the same result, and no unnecessary changes will be made.
+
+7. How do you use Ansible vaults to secure sensitive data?
+Answer:
+Use ansible-vault to encrypt secrets like passwords or tokens.
+
+bash
+Copy
+Edit
+ansible-vault encrypt secrets.yml
+To run with a vault:
+
+bash
+Copy
+Edit
+ansible-playbook site.yml --ask-vault-pass
+8. What are handlers in Ansible and how are they triggered?
+Answer:
+Handlers are tasks that run only when notified. They're typically used for restarting services.
+
+Example:
+
+yaml
+Copy
+Edit
+- name: Restart nginx
+  service:
+    name: nginx
+    state: restarted
+  listen: restart nginx
+9. What is the purpose of when, with_items, and register in Ansible?
+Answer:
+
+when: Conditional execution.
+
+with_items: Looping over a list.
+
+register: Stores the result of a task to be used later.
+
+Example:
+
+yaml
+Copy
+Edit
+- name: Create multiple users
+  user:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - alice
+    - bob
+10. How do you use dynamic inventories in Ansible?
+Answer:
+Dynamic inventories use a script or plugin to fetch host information (e.g., from AWS, Azure).
+
+bash
+Copy
+Edit
+ansible-inventory -i aws_ec2.yaml --list
+11. How do you test Ansible playbooks before running them?
+Answer:
+
+Use --check for a dry run.
+
+Use --diff to see changes.
+
+Use Molecule for role testing in CI.
+
+12. What are Ansible facts and how are they used?
+Answer:
+Facts are system properties automatically gathered by Ansible using the setup module.
+
+Example:
+
+yaml
+Copy
+Edit
+- debug:
+    msg: "This machine has {{ ansible_memory_mb.real.total }} MB RAM"

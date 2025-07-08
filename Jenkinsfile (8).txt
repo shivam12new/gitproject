@@ -1,0 +1,384 @@
+#!/usr/bin/env groovy
+def ver = BUILD_NUMBER
+def replaceFile(String fileName, String TgtPath){
+    return sh (script: "sudo cp $WORKSPACE/../env-var/"+("$JOB_NAME").split("/")[0]+"/$BRANCH_NAME/"+fileName+" $WORKSPACE/"+TgtPath+"/"+fileName+"", returnStdout: true).trim();
+}
+def getEnvVar(String paramName){
+    return sh (script: "grep '${paramName}' ENV_VARS/project.properties|cut -d'=' -f2", returnStdout: true).trim();
+}
+pipeline
+{
+    agent {
+  	    label 'LinuxAgent'
+    }
+	tools {
+                jdk 'Amazon_Corretto_17'
+               }
+	stages {
+	    stage('Init') {
+            steps {
+                script {
+                    env.LATEST_TAG = env.LATEST_TAG
+                    env.BASE_DIR = pwd()
+                    // Read the project.properties file
+                    def propertiesContent = readFile('ENV_VARS/project.properties')
+                    // Split the content into lines and process each line
+                    def inValidEnvVars = []
+                    propertiesContent.split('\n').each { line ->
+                        // Skip empty lines and comments
+                        if (line.trim() && !line.startsWith('#')) {
+                            def (key, value) = line.split('=').collect { it.trim() }
+                            if (value) {
+                                env[key] = value
+                            } else {
+                                inValidEnvVars.add(key)
+                            }
+                        }
+                    }
+
+                    // Retrieve the Git repository URL
+                    def repoUrl = scm.getUserRemoteConfigs()[0].getUrl()              
+                   // Extract the repository name from the URL
+                    def ValidateRepoName = repoUrl =~ /([^\/]+?)(\.git)?$/
+                    if (ValidateRepoName) {
+                        env.REPO_NAME = ValidateRepoName[0][1]
+		    }
+                    else {
+                       echo "Repo name entered is incorrect"
+                    }
+                    if (env.REPO_NAME == null || env.REPO_NAME.trim().isEmpty()) {
+                        inValidEnvVars.add('REPO_NAME')
+                    }
+                    // Throw an error if any required environment variable is missing or blank
+                    if (inValidEnvVars) {
+                        error "The following required environment variables are missing or blank: ${inValidEnvVars.join(', ')}"
+                    }
+                }
+            }
+        }
+
+	/*stage('Trigger Portal2 Pipeline') {
+		       steps {
+			       script {
+				       echo 'Triggering Portal2 pipeline...'
+				       def triggeredBuild = build job: "${env.REPO_NAME}2/${env.BRANCH_NAME}", wait: true, propagate: true
+				       echo "Triggered build ${triggeredBuild.number} finished with status: ${triggeredBuild.result}"
+                }
+            }
+        }
+
+        stage('Add Portal2 WAR') {
+            steps {
+                script {
+                    def version = sh(script: """
+                        cd ${WORKSPACE}/../${env.REPO_NAME}2_${env.BRANCH_NAME}
+                        grep '\\<version\\>' pom.xml | head -n 1 | sed -e 's/<[^>]*>//g' | xargs
+                    """, returnStdout: true).trim()
+
+                    sh "cp ${WORKSPACE}/../${env.REPO_NAME}2_${env.BRANCH_NAME}/target/${env.REPO_NAME}2-${version}.war wars/"
+                    sh "mv wars/${env.REPO_NAME}2-${version}.war wars/${env.REPO_NAME}2.war"
+                }
+            }
+        }*/
+	       	
+        stage('Code Quality and Security Check via Snyk') {
+      steps {
+        echo 'Starting Code Quality and Security Check via Snyk...'
+	sh """
+                 export PATH="${env.MAVEN_HOME}/bin:${env.PATH}"
+                 mvn -version
+                 """
+        snykSecurity(
+          snykInstallation: 'Synk-Security-Tool',
+          snykTokenId: 'Synk_API_Token',
+           additionalArguments: " -- -s ${WORKSPACE}/../${COMMON_FILE}",		
+	  failOnIssues: 'false',
+          failOnError: 'true',
+	  projectName: env.REPO_NAME,
+	  severity: 'low'	
+        )
+      }
+    }
+stage('Snyk Code') {
+    environment {
+      SNYK_AUTH_TOKEN = credentials('SNYK_AUTH_TOKEN')
+    }
+    steps {
+        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+            sh '''
+                # Using the custom environment variable for Snyk tools
+                ${WORKSPACE}/../../tools/io.snyk.jenkins.tools.SnykInstallation/Synk-Security-Tool/snyk-linux auth ${SNYK_AUTH_TOKEN}
+                ${WORKSPACE}/../../tools/io.snyk.jenkins.tools.SnykInstallation/Synk-Security-Tool/snyk-linux code test --json | ${WORKSPACE}/../../tools/io.snyk.jenkins.tools.SnykInstallation/Synk-Security-Tool/snyk-to-html-linux -o results.html
+            '''
+        }
+            }
+    }
+	/*stage('Code Quality Check via SonarQube') {
+			 when {
+                           anyOf {
+                             allOf {
+                               expression { return env.BRANCH_NAME == 'dev' && env.SONARQUBE_STAGE == 'true' }
+            }
+                             allOf {
+                               expression { return env.BRANCH_NAME != 'dev' }
+            }
+        }
+    }
+   			 steps {
+       				script {
+       					def scannerHome = tool 'Sonarqube-Scanner';
+          				withSonarQubeEnv("SonarQube") {
+           				sh "${tool("Sonarqube-Scanner")}/bin/sonar-scanner \
+					-Dsonar.host.url=${SONAR_HOST_URL} \
+					-Dsonar.projectKey=com.adeptia:portal \
+					-Dsonar.login=${SONAR_AUTH_TOKEN} \
+					-Dsonar.analysis.buildNumber=${BUILD_NUMBER} \
+					-Dsonar.analysis.jobName=${JOB_NAME} \
+					-Dsonar.java.binaries=. \
+					-Dsonar.java.source=8 \
+					-Dsonar.sources=. \
+					-Dsonar.sourceEncoding=UTF-8 \
+					-Dsonar.nodejs.executable=${tool("NodeJS")}/bin/node"
+                    			}
+           			}
+       			}
+   		}*/
+         
+	    stage ('Build') {
+            steps {
+		      withCredentials([string(credentialsId: "${WHITESOURCE_ORGTOKEN}", variable: 'WHITESOURCE_TOKEN')]){                   
+		      sh """
+                      export PATH="${env.MAVEN_HOME}/bin:${env.PATH}"
+                      mvn -version
+		      mvn -s ${WORKSPACE}/../${COMMON_FILE} whitesource:update -Dorg.whitesource.orgToken=${WHITESOURCE_TOKEN}
+		      mvn -s ${WORKSPACE}/../${COMMON_FILE} whitesource:checkPolicies -Dorg.whitesource.orgToken=${WHITESOURCE_TOKEN}
+                      mvn -s ${WORKSPACE}/../${COMMON_FILE} clean install 
+	              """  
+		      }
+                    }
+                       }
+
+/*stage('OWASP Dependency-Check Vulnerabilities') {
+    environment {
+        NVD_API_KEY = credentials('NVD-API-KEY')  // Use your NVD API key
+        GITHUB_TOKEN = credentials('3cd88321-d116-4810-ac02-b254fb474870')  // Use your GitHub token
+    }
+    steps {
+        script {
+            def retries = 5
+            def delay = 10  // Initial delay in seconds
+            def nvdAvailable = false
+            def githubAvailable = false
+            def success = false
+
+            // Function to check NVD API availability
+            def checkNvdAvailability = {
+                try {
+                    def response = httpRequest(url: 'https://api.nvd.nist.gov/vuln/search', validResponseCodes: '200', timeout: 30)
+                    echo "NVD API Response: ${response}"
+                    return response != null
+                } catch (Exception e) {
+                    echo "NVD API is down or unreachable: ${e.getMessage()}"
+                    return false
+                }
+            }
+
+            // Function to check GitHub Advisory Database availability
+            def checkGithubAvailability = {
+                try {
+                    def response = httpRequest(url: 'https://api.github.com/advisories', validResponseCodes: '200', timeout: 30)
+                    echo "GitHub Advisory Response: ${response}"
+                    return response != null
+                } catch (Exception e) {
+                    echo "GitHub Advisory API is down or unreachable: ${e.getMessage()}"
+                    return false
+                }
+            }
+
+            // Check availability of NVD and GitHub Advisory services
+            nvdAvailable = checkNvdAvailability()
+            githubAvailable = checkGithubAvailability()
+
+            if (nvdAvailable || githubAvailable) {
+                echo "At least one service is available. Proceeding with Dependency-Check."
+
+                // Retry logic for NVD or GitHub (whichever is available)
+                for (int i = 0; i < retries; i++) {
+                    try {
+                        echo "Starting Dependency-Check (Attempt: ${i + 1})"
+                        
+                        // Build the additional arguments for the Dependency-Check based on the available services
+                        def additionalArguments = "-o './' -s './' -f 'ALL' --prettyPrint"
+                        
+                        if (nvdAvailable) {
+                            additionalArguments += " --nvdApiKey=${NVD_API_KEY}"
+                            echo "Using NVD for vulnerability checks."
+                        } else if (githubAvailable) {
+                            echo "GitHub Advisory Database is available, but Dependency-Check does not support direct integration."
+                        }
+
+                        // Run Dependency-Check tool
+                        dependencyCheck additionalArguments: additionalArguments, odcInstallation: 'OWASP Dependency-Check Vulnerabilities'
+                        
+                        success = true
+                        break // Exit loop if successful
+                    } catch (Exception e) {
+                        echo "Error: ${e.getMessage()}. Retrying in ${delay} seconds."
+                        if (i < retries - 1) {
+                            sleep(delay)
+                            delay *= 2  // Exponential backoff
+                        }
+                    }
+                }
+
+                // Fail the build if both services are unavailable after retries
+                if (!success) {
+                    error "Dependency-Check failed after ${retries} attempts due to service unavailability."
+                }
+            } else {
+                error "Both NVD and GitHub Advisory Database are unavailable. Cannot run Dependency-Check."
+            }
+        }
+    }
+}*/
+	    stage("publish to nexus") {
+            steps {
+                script {
+                    // Read POM xml file using 'readMavenPom' step , this step 'readMavenPom' is included in: https://plugins.jenkins.io/pipeline-utility-steps
+                    pom = readMavenPom file: "pom.xml";
+                    // Find built artifact under target folder
+                    filesByGlob = findFiles(glob: "target/*.${pom.packaging}");
+                    // Print some info from the artifact found
+                    echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
+                    // Extract the path from the File found
+                    artifactPath = filesByGlob[0].path;
+                    // Assign to a boolean response verifying If the artifact name exists
+                    artifactExists = fileExists artifactPath;
+
+                    if(artifactExists) {
+                        echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}";
+
+                        nexusArtifactUploader(
+			    	        nexusVersion: NEXUS_VERSION,
+			    	        protocol: NEXUS_PROTOCOL,
+				            nexusUrl: NEXUS_URL,
+                            groupId: pom.groupId,
+                            version: pom.version,
+			    	        repository: NEXUS_MAVEN_REPOSITORY,
+			    	        credentialsId: NEXUS_CREDENTIAL_ID,
+                            artifacts: [
+                                // Artifact generated such as .jar, .ear and .war files.
+                                [artifactId: pom.artifactId,
+                                classifier: '',
+                                file: artifactPath,
+                                type: pom.packaging],
+
+                                // Lets upload the pom.xml file for additional information for Transitive dependencies
+                                [artifactId: pom.artifactId,
+                                classifier: '',
+                                file: "pom.xml",
+                                type: "pom"]
+                            ]
+                        );
+                    }
+                	else {
+                        error "*** File: ${artifactPath}, could not be found";
+                    }
+		       }
+        }
+	}
+
+	    /*stage('Cleanup'){
+        	steps{
+            		sh '''
+            			docker rmi $(docker images -f 'dangling=true' -q) || true
+           			docker rmi $(docker images | sed 1,2d | awk '{print $3}') || true
+           			  '''
+        		}
+
+    	    }*/
+		
+	    stage('Docker Build') {
+    steps {
+        echo 'Building...'
+        script {
+            withCredentials([usernamePassword(credentialsId: "${NEXUS_DOCKER_CREDENTIALS_ID}", passwordVariable: 'password', usernameVariable: 'username')]) {
+                def LATEST_TAG = sh(
+                    script: '''
+                    #!/bin/sh
+                    latest_tag_rev=$(git rev-list --tags --max-count=1)
+                    latest_commit_rev=$(git rev-list HEAD --max-count=1)
+                    if [ -n "$latest_tag_rev" ]; then
+                        latest_tag=$(git describe --tags "$latest_tag_rev")
+                    fi
+                    if [ "$latest_tag_rev" != "$latest_commit_rev" ]; then
+                        latest_tag=$(git rev-list HEAD --max-count=1 --abbrev-commit)
+                    fi
+                    echo "$latest_tag"
+                    ''',
+                    returnStdout: true
+                ).trim()            
+                sh """
+                echo "${password}" | docker login -u ${username} ${NEXUS_DOCKER_REGISTRY_URL} --password-stdin
+                docker build -t ${DOCKER_IMAGE_URL}/${PROJECT_NAME}:${LATEST_TAG} .
+                """
+                
+                def pushStatus = sh(
+                    script: """
+                    docker push ${DOCKER_IMAGE_URL}/${PROJECT_NAME}:${LATEST_TAG}
+                    """,
+                    returnStatus: true
+                )
+                
+                if (pushStatus == 0) {
+                    echo 'Docker image pushed successfully. Deleting the local image...'
+                    sh """
+                    docker rmi ${DOCKER_IMAGE_URL}/${PROJECT_NAME}:${LATEST_TAG}
+                    """
+                } else {
+                    error("Failed to push Docker image to Nexus. Skipping deletion.")
+                }
+            }
+        }
+    }
+}
+		/*stage('publish Helm to nexus'){
+            steps {
+                script {
+                     	withCredentials([usernamePassword(credentialsId: "${NEXUS_HELM_REPO_CREDENTIAL_ID}", passwordVariable: 'password', usernameVariable: 'username')]){
+                        sh '''
+                            helm repo add  nexus https://${username}:${password}@${NEXUS_HELM_REPO_URL}/
+	                    helm package deployment/${PROJECT_NAME}/
+			    curl -u ${username}:${password} https://${NEXUS_HELM_REPO_URL}/ --upload-file ${PROJECT_NAME}-${HELM_CHART_VERSION}.tgz -v
+                         	'''
+                     	}
+                }
+           }
+        }*/
+
+	    /*stage('Deploy to dev'){
+         	steps {
+            	script {
+                       	withCredentials([usernamePassword(credentialsId: "${NEXUS_HELM_REPO_CREDENTIAL_ID}", passwordVariable: 'password', usernameVariable: 'username')]){
+						sh '''
+							#!/bin/sh
+					 		LATEST_TAG_REV=$(git rev-list --tags --max-count=1)
+					 		LATEST_COMMIT_REV=$(git rev-list HEAD --max-count=1)
+					 		if [ -n "$LATEST_TAG_REV" ]; then
+    					 	LATEST_TAG=$(git describe --tags "$(git rev-list --tags --max-count=1)")
+					 		fi
+					 		if [ "$LATEST_TAG_REV" != "$LATEST_COMMIT_REV" ]; then
+					 		LATEST_TAG=$(git rev-list HEAD --max-count=1 --abbrev-commit)
+    					 	echo "$LATEST_TAG"
+					 		fi
+		     				kubectl config get-contexts
+							kubectl config use-context ${CLUSTER_CONTEXT}
+							helm repo update -n ${NAMESPACE}
+							helm upgrade -i ${PROJECT_NAME} deployment/${PROJECT_NAME} -f deployment/${PROJECT_NAME}/config/${ENVIRONMENT} --set image.tag=${LATEST_TAG}  -n ${NAMESPACE}
+                            '''
+                	 }
+             	}
+         	}
+    	}*/
+}
+}

@@ -1,0 +1,101 @@
+Prometheus & Grafana — Interview Questions & Answers
+1. What is Prometheus and what problem does it solve?
+Answer:
+Prometheus is an open-source monitoring and alerting toolkit. It collects metrics in a time-series database, allowing teams to monitor applications, infrastructure, and systems in real time.
+
+2. How does Prometheus collect data?
+Answer:
+Prometheus pulls (scrapes) metrics from configured targets (exporters) over HTTP at regular intervals. Each target exposes a /metrics endpoint.
+
+3. What is the role of exporters in Prometheus? Name a few commonly used exporters.
+Answer:
+Exporters expose metrics in Prometheus format.
+
+Common exporters:
+
+node_exporter: system metrics (CPU, RAM, disk)
+
+blackbox_exporter: external probes (HTTP, TCP)
+
+cadvisor: container metrics
+
+mysqld_exporter, redis_exporter: DB metrics
+
+4. What is PromQL? Give an example.
+Answer:
+PromQL (Prometheus Query Language) is used to query time-series data.
+
+Example:
+
+promql
+Copy
+Edit
+rate(http_requests_total[5m])
+Returns the per-second rate of HTTP requests over 5 minutes.
+
+5. What is a Prometheus alert rule?
+Answer:
+An alert rule defines conditions based on PromQL queries. If the condition is met, it triggers an alert sent via Alertmanager.
+
+Example:
+
+yaml
+Copy
+Edit
+alert: HighCPUUsage
+expr: avg(rate(cpu_usage_seconds_total[1m])) > 0.85
+for: 2m
+labels:
+  severity: critical
+annotations:
+  summary: "High CPU Usage"
+6. What is Alertmanager and how does it work with Prometheus?
+Answer:
+Alertmanager handles alerts from Prometheus, grouping, deduplicating, and routing them to email, Slack, PagerDuty, etc. It supports silence periods and inhibition rules.
+
+7. How does Grafana integrate with Prometheus?
+Answer:
+Grafana connects to Prometheus as a data source. It allows you to query metrics using PromQL and create interactive, real-time dashboards.
+
+8. What is a Grafana dashboard and how do you build one?
+Answer:
+A dashboard is a collection of panels (graphs, tables, gauges) showing real-time metrics.
+
+To build:
+
+Connect to a Prometheus data source
+
+Create panels with PromQL queries
+
+Add variables for dynamic filtering (e.g., namespace, pod)
+
+9. How do you secure a Prometheus/Grafana setup?
+Answer:
+
+Use HTTPS and authentication (OAuth, LDAP, etc.)
+
+Restrict access with firewalls and reverse proxies
+
+Set up RBAC in Grafana for dashboards and data sources
+
+10. What are recording rules in Prometheus?
+Answer:
+Recording rules allow you to precompute expensive queries and save their results as new time series, improving dashboard and alert performance.
+
+11. How do you scale Prometheus?
+Answer:
+
+Use federation to aggregate metrics from multiple Prometheus servers
+
+Shard scraping across Prometheus instances
+
+Use Thanos or Cortex for long-term storage and horizontal scaling
+
+12. How would you monitor a Kubernetes cluster with Prometheus and Grafana?
+Answer:
+
+Deploy Prometheus Operator or kube-prometheus-stack
+
+Use kube-state-metrics and node_exporter
+
+Create Grafana dashboards using Kubernetes-specific templates

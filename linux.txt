@@ -1,0 +1,106 @@
+Linux — Interview Questions & Answers (DevOps-Focused)
+1. What is the difference between a process and a thread?
+Answer:
+A process is an independent execution unit with its own memory. A thread is a lightweight subprocess that shares memory and resources with other threads of the same process.
+
+2. How do you check CPU, memory, and disk usage in Linux?
+Answer:
+
+CPU: top, htop, mpstat
+
+Memory: free -m, vmstat, top
+
+Disk: df -h, du -sh *, iostat
+
+3. How can you find which process is using a specific port?
+Answer:
+
+bash
+Copy
+Edit
+sudo lsof -i :<port>
+sudo netstat -tulnp | grep <port>
+4. How do file permissions work in Linux? Explain chmod 755.
+Answer:
+Permissions are given to user, group, and others:
+
+7: read (4) + write (2) + execute (1)
+
+5: read (4) + execute (1)
+
+So chmod 755 file.sh means:
+
+Owner: rwx
+
+Group: r-x
+
+Others: r-x
+
+5. What is the difference between a hard link and a soft link?
+Answer:
+
+Hard link: Direct pointer to file data, indistinguishable from the original.
+
+Soft link (symlink): Points to a path; breaks if the target file is deleted.
+
+6. How do you search for a file or string in Linux?
+Answer:
+
+Find file: find / -name "filename"
+
+Find string in files: grep -r "string" /path/to/dir
+
+7. How do you monitor real-time logs of a service?
+Answer:
+
+bash
+Copy
+Edit
+journalctl -u <service> -f
+tail -f /var/log/syslog
+8. How do you manage services in Linux?
+Answer:
+
+bash
+Copy
+Edit
+systemctl start|stop|restart|status <service>
+systemctl enable|disable <service>
+9. What is crontab and how do you set up a scheduled task?
+Answer:
+crontab is used to schedule periodic jobs.
+
+Example:
+
+bash
+Copy
+Edit
+crontab -e
+# Run script.sh at 2am daily
+0 2 * * * /home/user/script.sh
+10. How do you find and kill a running process by name?
+Answer:
+
+bash
+Copy
+Edit
+ps aux | grep process_name
+kill -9 <PID>
+pkill -f process_name
+11. How do you check open ports on a Linux server?
+Answer:
+
+bash
+Copy
+Edit
+netstat -tuln
+ss -tuln
+12. What is ulimit and how do you change it?
+Answer:
+ulimit controls user-level limits like open files or process counts.
+
+bash
+Copy
+Edit
+ulimit -n         # Get open file limit
+ulimit -n 65535   # Set higher limit temporarily

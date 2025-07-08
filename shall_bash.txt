@@ -1,0 +1,105 @@
+Shell/Bash Scripting — Interview Questions & Answers
+1. What is a shell script and why is it used?
+Answer:
+A shell script is a text file containing a series of commands that the shell executes. It's used to automate tasks like deployments, backups, monitoring, and system configuration.
+
+2. How do you define and use variables in a shell script?
+Answer:
+
+bash
+Copy
+Edit
+name="Shivam"
+echo "Hello, $name"
+No space allowed around the =.
+
+3. How do you write an if-else condition in Bash?
+Answer:
+
+bash
+Copy
+Edit
+if [ $x -gt 10 ]; then
+  echo "Greater than 10"
+else
+  echo "10 or less"
+fi
+4. What is the difference between " (double quotes) and ' (single quotes) in Bash?
+Answer:
+
+Double quotes allow variable expansion: "Hello $USER"
+
+Single quotes treat content literally: 'Hello $USER'
+
+5. How do you loop over a list in Bash?
+Answer:
+
+bash
+Copy
+Edit
+for item in apple banana mango; do
+  echo "Item: $item"
+done
+6. How do you write a script to check if a service is running?
+Answer:
+
+bash
+Copy
+Edit
+#!/bin/bash
+service=nginx
+if systemctl is-active --quiet $service; then
+  echo "$service is running"
+else
+  echo "$service is not running"
+fi
+7. How do you read input from a user in Bash?
+Answer:
+
+bash
+Copy
+Edit
+read -p "Enter your name: " name
+echo "Hello, $name"
+8. How do you handle functions in Bash?
+Answer:
+
+bash
+Copy
+Edit
+greet() {
+  echo "Hello, $1"
+}
+greet "Shivam"
+9. How do you capture command output in a variable?
+Answer:
+
+bash
+Copy
+Edit
+ip=$(hostname -I)
+echo "Server IP: $ip"
+10. How do you log messages with timestamps?
+Answer:
+
+bash
+Copy
+Edit
+echo "$(date '+%Y-%m-%d %H:%M:%S') - Task completed" >> /var/log/script.log
+11. Write a script to find the top 5 largest files in a directory.
+Answer:
+
+bash
+Copy
+Edit
+#!/bin/bash
+du -ah . | sort -rh | head -n 5
+12. How can you schedule this script using cron?
+Answer:
+
+bash
+Copy
+Edit
+crontab -e
+# Run every day at 1 AM
+0 1 * * * /home/user/script.sh

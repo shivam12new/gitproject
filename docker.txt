@@ -1,0 +1,135 @@
+Docker — Interview Questions & Answers
+1. What is Docker and how does it differ from a virtual machine (VM)?
+Answer:
+Docker is a containerization platform that allows developers to package applications and their dependencies into containers. Unlike VMs, containers share the host OS kernel, making them lightweight and faster to start, with less overhead.
+
+2. What is the difference between an image and a container?
+Answer:
+An image is a static, read-only template used to create containers. A container is a running instance of an image, with its own filesystem, process space, and network stack.
+
+3. Explain the role of layers in Docker images.
+Answer:
+Docker images are composed of layers that are stacked. Each instruction in the Dockerfile creates a new layer. Layers are cached and shared between images, which speeds up builds and saves storage.
+
+4. What is the difference between CMD and ENTRYPOINT in Docker?
+Answer:
+
+CMD provides default arguments for the container.
+
+ENTRYPOINT defines the executable that always runs.
+You can combine both to create a flexible but fixed command setup.
+
+Example:
+
+dockerfile
+Copy
+Edit
+ENTRYPOINT ["python"]
+CMD ["app.py"]
+5. What are volumes in Docker? How do they differ from bind mounts?
+Answer:
+
+Volumes are managed by Docker and stored in Docker's storage directory.
+
+Bind mounts use a specific directory on the host machine.
+Volumes are preferred for portability and backup.
+
+6. What is a multi-stage build and why is it useful?
+Answer:
+A multi-stage build uses multiple FROM statements in one Dockerfile to separate build and runtime environments. This helps reduce final image size by copying only required files from the build stage.
+
+Example:
+
+dockerfile
+Copy
+Edit
+FROM golang:1.16 as builder
+WORKDIR /app
+COPY . .
+RUN go build -o app
+
+FROM alpine
+COPY --from=builder /app/app /app
+CMD ["/app"]
+7. How does Docker networking work?
+Answer:
+Docker provides different network drivers:
+
+Bridge (default for containers)
+
+Host (shares host network)
+
+Overlay (used in Swarm for multi-host communication)
+Containers on the same bridge network can communicate via container name.
+
+8. How can you reduce the size of a Docker image?
+Answer:
+
+Use a minimal base image like alpine.
+
+Combine multiple RUN commands.
+
+Remove unnecessary files.
+
+Use .dockerignore to exclude files.
+
+Use multi-stage builds.
+
+9. How do you troubleshoot a failing Docker container?
+Answer:
+
+docker ps -a: Check container status
+
+docker logs <container>: View logs
+
+docker inspect <container>: View detailed metadata
+
+docker exec -it <container> /bin/sh: Enter the container
+
+10. How do you scan a Docker image for vulnerabilities?
+Answer:
+Use tools like:
+
+Trivy: trivy image myapp:latest
+
+Clair
+
+Docker Hub vulnerability scanning
+
+Anchore
+
+11. How do you share data between containers?
+Answer:
+
+Use a shared volume mounted to multiple containers.
+
+Use Docker Compose to define shared volumes.
+
+12. What is Docker Compose and how does it work?
+Answer:
+Docker Compose allows you to define multi-container applications using a docker-compose.yml file. It manages networking, volumes, and container dependencies.
+
+Example:
+
+yaml
+Copy
+Edit
+version: '3'
+services:
+  web:
+    image: nginx
+    ports:
+      - "80:80"
+  app:
+    image: myapp
+    depends_on:
+      - db
+  db:
+    image: mysql
+13. What’s the difference between Docker Swarm and Kubernetes?
+Answer:
+
+Swarm is Docker's built-in orchestrator: simple but limited.
+
+Kubernetes is more complex and powerful: supports autoscaling, secrets management, config maps, etc.
+

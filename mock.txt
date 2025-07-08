@@ -1,0 +1,157 @@
+1. Can you walk me through your CI/CD pipeline and explain how you’ve automated deployments in your current project?
+
+"In our project, we have a dedicated CI/CD pipeline for each microservice such as Portal, WebRunner, and Runtime. Each service repository contains its own Dockerfile and Jenkinsfile.
+
+When developers merge their code into the main branch, the Jenkins pipeline is triggered automatically. The pipeline pulls the code, builds the Docker image, runs unit tests, and then pushes the image to Nexus as our container registry.
+
+We use webhooks from Git to trigger the Jenkins job and the pipeline handles build, tag, test, and deploy steps. Post-deployment, we also notify developers via email or Slack in case of failures or successes."
+
+
+2. You're deploying a microservice using a Helm chart into a Kubernetes cluster. After deployment, the pod is stuck in CrashLoopBackOff.
+How would you troubleshoot and resolve this issue?
+
+
+If a pod is stuck in CrashLoopBackOff, my first step is to check its logs using:
+
+
+kubectl logs <pod-name>
+This usually provides information about the reason for failure — like missing environment variables, failed dependencies, or license issues.
+
+If the log doesn't help, I run:
+
+
+kubectl describe pod <pod-name>
+This can show issues like failed volume mounts, failed probes (liveness/readiness), or image pull errors.
+
+If it's a license issue, I update the correct license file or secret, then trigger a redeployment.
+
+I also check if the Helm chart values are correct and if any recent code or config changes might be responsible.
+
+Once the issue is fixed, I run:
+
+kubectl rollout restart deployment <deployment-name>
+to restart the pods cleanly."
+
+
+3. You're managing infrastructure using Terraform. A team member made changes, and now the terraform plan shows that several resources will be destroyed and recreated — even though the config hasn't changed much.
+
+How would you investigate and avoid unintentional resource recreation in Terraform?
+
+
+If terraform plan is showing unexpected resource deletions or replacements, I approach it step-by-step:
+
+Review the Terraform plan output carefully
+I look at what specific fields are causing Terraform to recreate resources — sometimes a small change (like a tag or name) can force recreation.
+
+Check the resource lifecycle settings
+I check if lifecycle blocks like prevent_destroy or ignore_changes are needed to avoid unnecessary changes.
+
+Compare actual configuration with the remote state
+I run:
+
+terraform show
+terraform state show <resource>
+to inspect the current state and compare it with code.
+
+Check for changes outside of Terraform
+If someone manually changed the resource in the cloud provider’s console, Terraform will detect a drift and try to reconcile by recreating.
+
+Validate state lock is working
+I ensure that state locking is enabled (e.g., with remote backends like S3 + DynamoDB) to prevent concurrent state modifications.
+
+Coordinate with the team
+I make sure changes are reviewed in a pull request with a terraform plan preview, so we can catch any destructive actions early."
+
+
+4. You're using Ansible to automate server provisioning. One of your tasks is supposed to install Nginx, but it’s failing silently (no error, but Nginx isn’t installed).
+
+How would you debug this issue and ensure your playbook works as expected?
+
+
+If an Ansible task like installing Nginx is failing silently, I follow these steps to debug:
+
+Run the playbook in check and verbose mode
+I run the playbook with -C (check mode) and -v or -vvv (verbose) to see more detail:
+
+bash
+Copy
+Edit
+ansible-playbook install-nginx.yml -C -vvv
+This shows what the task is doing and whether it's being skipped due to conditions or facts.
+
+Check the task and variables
+I make sure the task is correct:
+
+yaml
+Copy
+Edit
+- name: Install Nginx
+  apt:
+    name: nginx
+    state: present
+And that the become: yes is set if root permissions are needed.
+
+Confirm host group and inventory
+Sometimes tasks run on the wrong host group. I check the [web] group in the inventory file to ensure the right servers are targeted.
+
+Use --diff to see changes
+This shows exactly what would change:
+
+bash
+Copy
+Edit
+ansible-playbook install-nginx.yml --diff
+Add debug or register to check results
+I register the output and debug it:
+
+yaml
+Copy
+Edit
+- name: Install Nginx
+  apt:
+    name: nginx
+    state: present
+  register: nginx_status
+
+- debug:
+    var: nginx_status
+	
+	
+	
+	
+5. You’ve just set up monitoring for your Kubernetes cluster using Prometheus and Grafana. A team member reports that the CPU usage panel in Grafana is not updating.
+
+How would you go about troubleshooting this issue?
+
+
+If the CPU usage panel in Grafana is not updating, I follow a step-by-step approach:
+
+Check Grafana pod status
+I start by checking if the Grafana pod is running properly:
+
+
+kubectl get pods -n monitoring
+If the pod is crashing or stuck, I restart it and check logs:
+
+
+kubectl logs <grafana-pod> -n monitoring
+Check Prometheus data source in Grafana
+I open Grafana UI, go to Configuration → Data Sources, and make sure Prometheus is reachable and configured correctly.
+
+Verify Prometheus is scraping metrics
+I check if Prometheus is scraping data by visiting:
+
+
+http://<prometheus-service>:9090/targets
+If the node exporter or kubelet metrics endpoints are DOWN, Grafana won't get fresh data.
+
+Test the PromQL query
+I copy the query used in the Grafana panel and test it directly in Prometheus UI to confirm whether data is flowing.
+
+Check the Grafana dashboard time range
+Sometimes the time filter (e.g., last 1h vs 24h) or refresh interval causes confusion.
+
+Check panel query settings and refresh
+I check the specific panel's PromQL query, make sure it's correct, and ensure automatic refresh is enabled.
+
+If everything is configured but still not updating, I explore network issues, memory limits, or storage problems with Prometheus."
