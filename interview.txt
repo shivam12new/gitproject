@@ -1,0 +1,270 @@
+Tell me about yourself-
+
+Hi, my name is Shivam Verma. I have more then 3 years of experience in the DevOps field. Over this time, I’ve worked  implementing and maintaining CI/CD pipelines using Jenkins, and managing containerized applications using Kubernetes.
+
+I’ve also crafted OPA (Open Policy Agent) configurations to efficiently secure Kubernetes deployments, ensuring compliance and access control within clusters. I've handled troubleshooting of azure Kubernetes cluster and deployments done via Helm charts, often work closely with the Development and QA teams to resolve issues quickly and smoothly.
+
+In addition, I’ve worked with Terraform for infrastructure automation, and have also set up Grafana dashboards for effective monitoring and alerting of system metrics and application performance.
+
+I’m passionate about automation, system reliability, and learning new DevOps tools and practices. I'm now looking for an opportunity where I can take on more cloud-focused challenges and continue growing in areas like security, scalability, and infrastructure as code.
+
+
+
+
+----------------------------------------------------------------------------------------------------------------------
+
+
+
+
+"Sure. I'm working on a microservices-based application deployed on a azure Kubernetes cluster. Each microservice—like Portal, WebRunner, and Runtime—has its own Git repository with a Dockerfile and Jenkinsfile.
+
+My main responsibility is building and maintaining CI/CD pipelines using Jenkins. I’ve implemented a dedicated CI/CD pipeline for each service. When developers push code to the main branch, a Git webhook triggers the corresponding Jenkins pipeline automatically. The pipeline handles code checkout, Docker image build, unit testing, and then pushes the image to our Nexus container registry.
+
+For deployments, we use Helm charts, and I’ve been actively involved in troubleshooting issues related to Kubernetes deployments through helm. I collaborate closely with developers and QA teams to resolve build, test, and deployment issues.
+
+Post-deployment, the pipelines send notifications through email or Slack to keep the team informed of the build status. Additionally, I’ve set up Grafana dashboards to monitor system metrics and application performance using Prometheus, which helps in proactive alerting and debugging."
+
+
+
+OPA-
+securityContext, containerSecurityContext, runAsNonRoot, allowPrivilegeEscalation, readOnlyRootFilesystem
+
+
+
+----------------------------------------------------------------------------------------------------------------------
+
+
+
+What is a Declarative Pipeline in Jenkins?
+A Declarative Pipeline is a simpler, structured way to define your CI/CD workflow in Jenkins using a predefined syntax. It's designed to be more readable, maintainable, and less error-prone than the older Scripted Pipeline style.
+
+Conclusion:
+Your Jenkinsfile is a Declarative Pipeline with embedded Scripted sections.
+
+This is a common and correct approach for complex pipelines.
+
+You do not need to rewrite it to make it "declarative" — it already is.
+
+
+
+
+
+----------------------------------------------------------------------------------------------------------------------
+Q1: How do you write Helm values files?
+"I define custom configuration in values.yaml for each environment—like dev, QA, or production. These include settings such as replica counts, image tags, environment variables, resource limits, and ingress rules. During deployment via Jenkins, we use Helm’s --values flag to pass the appropriate environment-specific values file. This allows dynamic and reusable Helm templates."
+
+📌 Example:
+
+yaml
+Copy
+Edit
+image:
+  repository: myapp
+  tag: 1.2.3
+
+resources:
+  limits:
+    cpu: "500m"
+    memory: "256Mi"
+	
+⏪ Q2: How do you handle rollback or versioning in deployments?
+"We use Helm’s built-in versioning and rollback capability. Each deployment creates a new Helm release revision. If something breaks, we can use helm rollback <release> <revision> to revert to a previous stable version. Jenkins keeps track of image tags and release numbers to ensure traceability, and our Docker images are tagged with Git commit SHA or version number."
+
+📊 Q3: What metrics do you monitor in Grafana?
+"We use Grafana with Prometheus as the data source. Key metrics we monitor include:
+
+CPU and memory usage per pod
+
+Pod restarts and crash loops
+
+HTTP error rates (4xx/5xx)
+
+Request latency
+
+JVM metrics for Java apps (if applicable)
+
+Custom application metrics exposed via Prometheus endpoints"
+
+We also set up alerting rules for abnormal spikes in error rates or resource usage."
+
+❌ Q4: How do you handle failed builds or deployments?
+
+"For failed builds or deployments, Jenkins immediately stops the pipeline and sends notifications via email or Slack. We include logs and error details in the message. I usually check Jenkins logs, container logs (kubectl logs), and Helm error outputs to identify the issue. Common fixes include dependency mismatches, resource limits, or incorrect image tags. Once resolved, we rerun the pipeline. In some cases, we roll back using Helm or restart failed pods."
+
+
+----------------------------------------------------------------------------------------------------------------------l
+
+Kubernetes & Helm
+Q: How have you used Helm in your projects?
+A: I’ve used Helm to package and deploy microservices on Kubernetes. I’ve worked with Helm charts to manage configurations for environments, automate updates, and define repeatable deployment strategies.
+
+Q: What’s the difference between Helm 2 and Helm 3?
+A: Helm 3 removed Tiller (which was a security concern in Helm 2). Helm 3 operates client-side, supports better security and improved release management.
+
+
+Jenkins & CI/CD
+Q: Can you explain the CI/CD pipeline you've built with Jenkins?
+A: Yes, I’ve built both Freestyle and Pipeline jobs. I configured Jenkins to pull code from GitHub/GitLab, build it, run tests, and deploy it to Kubernetes clusters using Helm. I also integrated notifications and rollback strategies.
+
+Q: How do you manage secrets in your pipeline?
+A: I’ve used Jenkins credentials plugin to store secrets securely, and in some cases, integrated with external secret management tools or Kubernetes secrets.
+
+
+How do you monitor your Kubernetes cluster?
+A: I use Prometheus to collect metrics and Grafana to visualize them. I’ve created custom dashboards for memory, CPU usage, pod status, and alerts for threshold breaches.
+
+Q: Have you worked with the ELK Stack?
+A: I have basic experience. I’ve used it for log aggregation and searching logs across microservices during troubleshooting.
+
+
+
+
+Terraform & Ansible (IaC)
+Q: How have you used Terraform?
+A: I’ve worked with Terraform at a basic level to provision cloud infrastructure like EC2 instances and security groups in AWS.
+
+Q: How comfortable are you with Ansible?
+A: I’ve used Ansible to automate some routine setup tasks like package installations and system configuration.
+
+
+
+Scripting & Automation
+Q: What types of tasks have you automated with Bash scripts?
+A: I’ve automated deployment steps, log collection, service checks, and basic monitoring setup using Bash scripts.
+
+ Security Testing
+Q: How have you performed security testing in your projects?
+A: I used tools like Burp Suite, White Source, and Dependency Checker to identify vulnerabilities in our application and third-party libraries. I worked with the dev team to patch or upgrade where needed.
+
+
+
+
+Dev Collaboration
+Q: How do you coordinate with Dev and QA teams during deployment?
+A: I join sprint planning and daily standups to align on release cycles. I work closely with QA to test on staging and with developers to debug issues during deployment.
+
+
+
+
+. What is DevOps and why is it important?
+Answer:
+DevOps is a set of practices that combines software development (Dev) and IT operations (Ops). Its goal is to shorten the development lifecycle, increase deployment frequency, and ensure high-quality releases. It promotes automation, continuous integration/delivery (CI/CD), and close collaboration between teams to deliver software faster and more reliably.
+
+
+
+Difference between Continuous Integration, Delivery, and Deployment
+Answer:
+
+Continuous Integration (CI): Regularly merging code changes into a shared repository and running automated tests to detect issues early.
+
+Continuous Delivery (CD): Automatically preparing code for release to staging or production after passing tests.
+
+Continuous Deployment: Automatically deploying every code change to production without manual approval, assuming tests pass.
+
+
+
+ How does Kubernetes handle high availability and scaling?
+Answer:
+Kubernetes ensures high availability using ReplicaSets that maintain a desired number of pod replicas. For scaling, it supports the Horizontal Pod Autoscaler, which adjusts the number of pods based on CPU/memory or custom metrics. It also distributes pods across nodes to handle load and node failures efficiently.
+
+
+
+
+What are Pods, ReplicaSets, and Deployments in Kubernetes?
+Answer:
+
+Pod: The smallest deployable unit in Kubernetes, which can contain one or more containers.
+
+ReplicaSet: Ensures a specified number of pod replicas are always running.
+
+Deployment: Manages ReplicaSets and provides declarative updates to applications, allowing rolling updates and rollbacks.
+
+
+
+
+How does a Rolling Update work in Kubernetes?
+Answer:
+A rolling update replaces old versions of pods with new ones gradually. Kubernetes ensures that a minimum number of pods are available during the update to prevent downtime. You can control the update strategy using parameters like maxUnavailable and maxSurge.
+
+
+
+
+Explain Docker image creation and optimization techniques.
+Answer:
+Docker images are created using Dockerfiles. Optimization techniques include:
+
+Using minimal base images like alpine.
+
+Combining multiple RUN commands into one layer.
+
+Removing unnecessary packages or files.
+
+Using .dockerignore to exclude unneeded files.
+
+Caching layers efficiently by ordering steps logically.
+
+
+
+
+
+What is Infrastructure as Code (IaC) and why use it?
+Answer:
+IaC is the practice of managing and provisioning infrastructure using code instead of manual processes. Tools like Terraform and Ansible allow teams to version, test, and reuse infrastructure configuration, improving automation, consistency, and scalability.
+
+
+
+
+How do you implement Blue-Green or Canary deployments?
+Answer:
+
+Blue-Green Deployment: Maintains two identical environments (Blue and Green). One is active (Blue), and the other (Green) is updated and tested. Once validated, traffic is switched to Green.
+
+Canary Deployment: Releases the new version to a small subset of users. If it performs well, it gradually rolls out to the rest.
+
+
+
+
+What’s the difference between Prometheus and Grafana?
+Answer:
+
+Prometheus is a monitoring and alerting tool that collects metrics from configured targets.
+
+Grafana is a visualization tool that can use Prometheus as a data source to create dashboards and alerts. Prometheus stores the data; Grafana helps visualize it.
+
+
+
+
+How do you secure your CI/CD pipelines?
+Answer:
+
+Use credential managers or secrets management (e.g., HashiCorp Vault, AWS Secrets Manager).
+
+Implement Role-Based Access Control (RBAC) in Jenkins/GitLab.
+
+Scan code and dependencies using tools like WhiteSource, OWASP Dependency Checker.
+
+Use image scanning tools (e.g., Trivy) to catch vulnerabilities in containers.
+
+Restrict pipeline execution to authorized users and secure external integrations.
+
+
+
+
+
+
+Tell me about yourself.
+Answer:
+I'm Shivam Verma, and I have over 3 years of experience in DevOps, working extensively on CI/CD pipelines using Jenkins, Kubernetes-based deployments using Helm, and containerization with Docker. I've also worked with monitoring tools like Prometheus and Grafana and have basic experience with Terraform and Ansible. I enjoy automating processes and working collaboratively with developers and QA teams to deliver stable, secure, and scalable systems. I'm now looking to take on more cloud-focused DevOps challenges and grow my expertise in infrastructure and security.
+
+
+
+
+Why are you interested in this position/company?
+Answer:
+I'm particularly interested in this position because it aligns with my skills in Kubernetes, CI/CD automation, and monitoring. I’ve heard great things about the company’s engineering culture and focus on innovation. I’m looking for a role where I can continue to grow technically while contributing to a strong DevOps culture, and I believe your company provides that environment.
+
+
+
+Why are you leaving your current job?
+Answer:
+I’ve learned a lot in my current role, especially around CI/CD, Kubernetes, and team collaboration. I’m now looking for a new opportunity where I can work on more advanced cloud and DevOps projects, and continue to grow my skill set and take on more responsibility.
